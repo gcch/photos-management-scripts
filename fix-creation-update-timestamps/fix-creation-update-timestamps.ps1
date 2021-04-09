@@ -52,7 +52,7 @@ Get-ChildItem -File $ScriptDir | % {
 
     $ShellFolder = $ShellApplicationObject.Namespace($DirectoryPath)
 
-    if (@(".jpg", ".jpeg", ".png", ".gif", ".arw", ".heic", ".avi", ".mov", ".mp4").Contains($FileExtension)) {
+    if (@(".jpg", ".jpeg", ".png", ".gif", ".arw", ".heic", ".avi", ".mov", ".mp4").Contains($FileExtension.ToLower())) {
         Write-Debug "** ˆ—‘ÎÛƒtƒ@ƒCƒ‹"
 
         $image = $null
