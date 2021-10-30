@@ -18,4 +18,4 @@ Dim strScriptName
 strScriptName = objFso.GetBaseName(WScript.ScriptFullName)
 
 ' Execute PowerShell Script
-objShell.Run "powershell.exe -ExecutionPolicy Bypass "".\" & strScriptName & ".ps1""", 1, True
+objShell.Run "powershell.exe -ExecutionPolicy Bypass -File """ & objShell.CurrentDirectory & "\" & strScriptName & ".ps1""", 1, True
