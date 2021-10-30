@@ -107,7 +107,7 @@ Get-ChildItem -File | ForEach-Object {
             $Pattern = "yyyy-MM-dd_HH-mm-ss"
             Write-Debug "** 取得: $Pattern"
             try {
-                $DateTaken = $BaseName.Substring(0, 19)
+                $DateTaken = $BaseName.Substring(0, $Pattern.Length)
                 $DateTaken = [DateTime]::ParseExact($DateTaken, $Pattern, $null)
             }
             catch {
