@@ -1,25 +1,23 @@
-Write-Host ""
-Write-Host "======================================================================"
-Write-Host ""
-Write-Host "Fix Creation Timestamp and Update Timestamps"
-Write-Host ""
-Write-Host "Copyright (C) 2021 tag. All rights reserved."
-Write-Host ""
-Write-Host "======================================================================"
-Write-Host ""
+# ======================================================================
+#
+# æ—¥ä»˜ä¿®æ­£ã‚¹ã‚¯ãƒªãƒ—ãƒˆ
+#
+# Copyright (C) 2021 tag. All rights reserved.
+#
+# ======================================================================
 
 Add-Type -AssemblyName System.Drawing
 $ShellApplicationObject = New-Object -COMObject Shell.Application
 
-# ƒfƒoƒbƒOƒ‚[ƒh
+# ãƒ‡ãƒãƒƒã‚°ãƒ¢ãƒ¼ãƒ‰
 $DebugPreference = "SilentlyContinue"
-#$DebugPreference = "Continue"
+$DebugPreference = "Continue"
 
-# ƒXƒNƒŠƒvƒgƒfƒBƒŒƒNƒgƒŠ‚Ö‚ÌˆÚ“®
+# ã‚¹ã‚¯ãƒªãƒ—ãƒˆãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªã¸ã®ç§»å‹•
 $ScriptDir = Split-Path $MyInvocation.MyCommand.Path -Parent
 Set-Location $ScriptDir
 
-# •s‰Â‹•¶š‚Ìíœ
+# ä¸å¯è¦–æ–‡å­—ã®å‰Šé™¤
 Function Remove-InvisibleCharacter([string]$Text) {
     $Text = $Text -replace "\u200e", ""    # LEFT-TO-RIGHT MARK
     $Text = $Text -replace "\u200f", ""    # RIGHT-TO-LEFT MARK
@@ -35,89 +33,127 @@ Function Remove-InvisibleCharacter([string]$Text) {
     return $Text
 }
 
-Get-ChildItem -File $ScriptDir | % {
+Get-ChildItem -File | ForEach-Object {
 
-    Write-Host "----------------------------------------------------------------------"
+    Write-Debug "----------------------------------------------------------------------"
     $DirectoryPath = $_.DirectoryName
     $FullFilePath = $_.FullName
     $FileName = $_.Name
     $BaseName = $_.BaseName
     $FileExtension = [System.IO.Path]::GetExtension($FullFilePath).ToLower()
     
-    Write-Debug "ƒtƒ@ƒCƒ‹ƒpƒX: ${FullFilePath}"
-    Write-Debug "ƒfƒBƒŒƒNƒgƒŠ: ${DirectoryPath}"
-    Write-Host "ƒtƒ@ƒCƒ‹–¼: ${FileName}"
-    Write-Debug "ƒx[ƒX–¼: ${BaseName}"
-    Write-Debug "Šg’£q: ${FileExtension}"
+    Write-Debug "ãƒ•ã‚¡ã‚¤ãƒ«ãƒ‘ã‚¹: ${FullFilePath}"
+    Write-Debug "ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒª: ${DirectoryPath}"
+    Write-Debug "ãƒ•ã‚¡ã‚¤ãƒ«å: ${FileName}"
+    Write-Debug "ãƒ™ãƒ¼ã‚¹å: ${BaseName}"
+    Write-Debug "æ‹¡å¼µå­: ${FileExtension}"
 
     $ShellFolder = $ShellApplicationObject.Namespace($DirectoryPath)
 
-    if (@(".jpg", ".jpeg", ".png", ".gif", ".arw", ".heic", ".avi", ".mov", ".mp4").Contains($FileExtension.ToLower())) {
-        Write-Debug "** ˆ—‘ÎÛƒtƒ@ƒCƒ‹"
+    if (@(".jpg", ".jpeg", ".png", ".gif", ".arw", ".heic", ".avi", ".mov", ".mp4").Contains($FileExtension)) {
+        Write-Debug "** å‡¦ç†å¯¾è±¡ãƒ•ã‚¡ã‚¤ãƒ«"
 
         $image = $null
         $DateTaken = ""
 
-        # Drawing.Bitmap ‚É‚æ‚éu”N/Œ/“ú :•ª:•bv‚Ìæ“¾
+        # Drawing.Bitmap ã«ã‚ˆã‚‹ã€Œå¹´/æœˆ/æ—¥ æ™‚:åˆ†:ç§’ã€ã®å–å¾—
         if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
             try {
-                Write-Debug "** æ“¾: B‰e“ú (•b‚Ü‚Å)"
+                Write-Debug "** å–å¾—: æ’®å½±æ—¥æ™‚ (ç§’ã¾ã§)"
                 $image = New-Object System.Drawing.Bitmap($FullFilePath.ToString())
                 $DateTaken = [System.Text.Encoding]::ASCII.GetString($image.GetPropertyItem(36867).Value).ToString() -replace "`0", ""
-                $image.Dispose()
                 $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy:MM:dd HH:mm:ss", $null)
-            } catch {
-                Write-Debug "** ¸”s"
+            }
+            catch {
+                Write-Debug "** å¤±æ•—"
+            }
+            finally {
+                if ($image -ne $null) {
+                    $image.Dispose()
+                }
             }
         }
 
-        # Amazon Photos ‚Å‚Ì©“®¶¬–¼uyyyy-MM-dd_HH-mm-ss_nnnv‚©‚çæ“¾
+        # ã‚ˆãã‚ã‚Šãã†ãªãƒ•ã‚¡ã‚¤ãƒ«åã€ŒyyyyMMdd-HHmmssã€ã‹ã‚‰å–å¾—
         if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
-            Write-Debug "** æ“¾: Amazon Photos"
+            $Pattern = "yyyyMMdd-HHmmss"
+            Write-Debug "** å–å¾—: $Pattern"
+            try {
+                $DateTaken = $BaseName.Substring(0, $Pattern.Length)
+                $DateTaken = [DateTime]::ParseExact($DateTaken, $Pattern, $null)
+            }
+            catch {
+                Write-Debug "** å¤±æ•—"
+                $DateTaken = $null
+            }
+        }
+
+        # ã‚ˆãã‚ã‚Šãã†ãªãƒ•ã‚¡ã‚¤ãƒ«åã€ŒyyyyMMdd_HHmmssã€ã‹ã‚‰å–å¾—
+        if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
+            $Pattern = "yyyyMMdd_HHmmss"
+            Write-Debug "** å–å¾—: $Pattern"
+            try {
+                $DateTaken = $BaseName.Substring(0, $Pattern.Length)
+                $DateTaken = [DateTime]::ParseExact($DateTaken, $Pattern, $null)
+            }
+            catch {
+                Write-Debug "** å¤±æ•—"
+                $DateTaken = $null
+            }
+        }
+
+        # Amazon Photos ã§ã®è‡ªå‹•ç”Ÿæˆåã€Œyyyy-MM-dd_HH-mm-ss_nnnã€ã‹ã‚‰å–å¾—
+        if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
+            $Pattern = "yyyy-MM-dd_HH-mm-ss"
+            Write-Debug "** å–å¾—: $Pattern"
             try {
                 $DateTaken = $BaseName.Substring(0, 19)
-                $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy-MM-dd_HH-mm-ss", $null)
-            } catch {
-                Write-Debug "** ¸”s"
+                $DateTaken = [DateTime]::ParseExact($DateTaken, $Pattern, $null)
+            }
+            catch {
+                Write-Debug "** å¤±æ•—"
+                $DateTaken = $null
             }
         }
 
-        # GetDetailsOf ‚É‚æ‚éu”N/Œ/“ú :•ªv‚Ìæ“¾
+        # GetDetailsOf ã«ã‚ˆã‚‹ã€Œå¹´/æœˆ/æ—¥ æ™‚:åˆ†ã€ã®å–å¾—
         if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
-            Write-Debug "** æ“¾: B‰e“ú"
-            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 12)    # B‰e“ú
+            Write-Debug "** å–å¾—: æ’®å½±æ—¥æ™‚"
+            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 12)    # æ’®å½±æ—¥æ™‚
             $DateTaken = Remove-invisibleCharacter($DateTaken)
-            Write-Debug "“ú: $DateTaken"
-            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** ¸”s" }
+            Write-Debug "æ—¥æ™‚: $DateTaken"
+            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** å¤±æ•—" }
         }
         if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
-            Write-Debug "** æ“¾: ƒƒfƒBƒA‚Ìì¬“ú"
-            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 208)    # ƒƒfƒBƒA‚Ìì¬“ú
+            Write-Debug "** å–å¾—: ãƒ¡ãƒ‡ã‚£ã‚¢ã®ä½œæˆæ—¥æ™‚"
+            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 208)    # ãƒ¡ãƒ‡ã‚£ã‚¢ã®ä½œæˆæ—¥æ™‚
             $DateTaken = Remove-invisibleCharacter($DateTaken)
-            Write-Debug "“ú: $DateTaken"
-            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** ¸”s" }
+            Write-Debug "æ—¥æ™‚: $DateTaken"
+            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** å¤±æ•—" }
         }
         if (($DateTaken -eq $null) -or ($DateTaken -eq "")) {
-            Write-Debug "** æ“¾: ƒRƒ“ƒeƒ“ƒc‚Ìì¬“ú"
-            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 152)    # ƒRƒ“ƒeƒ“ƒc‚Ìì¬“ú
+            Write-Debug "** å–å¾—: ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®ä½œæˆæ—¥æ™‚"
+            $DateTaken = $ShellFolder.GetDetailsOf($ShellFolder.ParseName($FileName), 152)    # ã‚³ãƒ³ãƒ†ãƒ³ãƒ„ã®ä½œæˆæ—¥æ™‚
             $DateTaken = Remove-invisibleCharacter($DateTaken)
-            Write-Debug "“ú: $DateTaken"
-            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** ¸”s" }
+            Write-Debug "æ—¥æ™‚: $DateTaken"
+            if ($DateTaken -ne "") { $DateTaken = [DateTime]::ParseExact($DateTaken, "yyyy/MM/dd HH:mm", $null) } else { Write-Debug "** å¤±æ•—" }
         }
 
-        Write-Host "“ú: $DateTaken"
+        Write-Debug "æ—¥æ™‚: $DateTaken"
 
         if ($DateTaken -ne $null -and $DateTaken -ne "") {
-            Write-Debug "** XV: ì¬“ú"
+            Write-Debug "** æ›´æ–°: ä½œæˆæ—¥æ™‚"
             Set-ItemProperty $FileName -Name CreationTime -Value $DateTaken.ToString()
     
-            Write-Debug "** XV: XV“ú"
+            Write-Debug "** æ›´æ–°: æ›´æ–°æ—¥æ™‚"
             Set-ItemProperty $FileName -Name LastWriteTime -Value $DateTaken.ToString()
-        } else {
-            Write-Debug "** “ú•t‚ªæ“¾‚Å‚«‚È‚©‚Á‚½‚½‚ßAXV‚µ‚Ü‚¹‚ñ‚Å‚µ‚½"
         }
-    } else {
-        Write-Debug "** ˆ—‘ÎÛŠOƒtƒ@ƒCƒ‹"
+        else {
+            Write-Debug "** æ—¥ä»˜ãŒå–å¾—ã§ããªã‹ã£ãŸãŸã‚ã€æ›´æ–°ã—ã¾ã›ã‚“ã§ã—ãŸ"
+        }
+    }
+    else {
+        Write-Debug "** å‡¦ç†å¯¾è±¡å¤–ãƒ•ã‚¡ã‚¤ãƒ«"
     }
 
 }
