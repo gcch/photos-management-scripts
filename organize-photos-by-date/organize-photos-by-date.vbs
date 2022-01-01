@@ -12,7 +12,7 @@ Dim objFso : Set objFso = CreateObject("Scripting.FileSystemObject")
 Dim objShellApp : Set objShellApp = CreateObject("Shell.Application")
 Dim objShell : Set objShell = WScript.CreateObject("WScript.Shell")
 
-' ƒXƒNƒŠƒvƒgƒtƒHƒ‹ƒ_ƒpƒX
+' ã‚¹ã‚¯ãƒªãƒ—ãƒˆãƒ•ã‚©ãƒ«ãƒ€ãƒ‘ã‚¹
 Dim strScriptDir : strScriptDir = Left(WScript.ScriptFullName, Len(WScript.ScriptFullName) - Len(WScript.ScriptName))
 Dim strSubScriptDir : strSubScriptDir = WScript.ScriptName
 Dim objScriptDir : Set objScriptDir = objShellApp.NameSpace(strScriptDir)
@@ -38,20 +38,20 @@ Set objDirItems = objScriptDir.Items()
 For Each objItem in objDirItems
 	If Not objItem.IsFolder Then
 		strFileExtension = LCase(objFso.GetExtensionName(objItem))
-		If strFileExtension = "jpg" Or strFileExtension = "png" Or strFileExtension = "raw" Or strFileExtension = "avi" Or strFileExtension = "mp4" Then
+		If strFileExtension = "jpg" Or strFileExtension = "png" Or strFileExtension = "3gp" Or strFileExtension = "raw" Or strFileExtension = "avi" Or strFileExtension = "mp4" Then
 			'WScript.Echo objScriptDir.ParseName(objItem.Name)
 
-			' Exif î•ñ‚ÌB‰e“ú‚ğæ“¾
-			strDateOfTaken = objScriptDir.GetDetailsOf(objScriptDir.ParseName(objItem.Name), 12)	' 12: B‰e“ú
+			' Exif æƒ…å ±ã®æ’®å½±æ—¥æ™‚ã‚’å–å¾—
+			strDateOfTaken = objScriptDir.GetDetailsOf(objScriptDir.ParseName(objItem.Name), 12)	' 12: æ’®å½±æ—¥æ™‚
 			'WScript.Echo strDateOfTaken
 
-			' Exif î•ñ‚ÌB‰e“ú‚ªæ“¾‚Å‚«‚È‚¢ê‡Aƒtƒ@ƒCƒ‹‚ÌXV“ú‚ğg—p
+			' Exif æƒ…å ±ã®æ’®å½±æ—¥æ™‚ãŒå–å¾—ã§ããªã„å ´åˆã€ãƒ•ã‚¡ã‚¤ãƒ«ã®æ›´æ–°æ—¥æ™‚ã‚’ä½¿ç”¨
 			If Len(strDateOfTaken) = 0 Then
-				strDateOfTaken = objScriptDir.GetDetailsOf(objScriptDir.ParseName(objItem.Name), 3)	' 3: XV“ú
+				strDateOfTaken = objScriptDir.GetDetailsOf(objScriptDir.ParseName(objItem.Name), 3)	' 3: æ›´æ–°æ—¥æ™‚
 				'WScript.Echo strDateOfTaken
 			End If
 
-			' ‰½‚©‚µ‚ç“ú‚ªæ“¾‚Å‚«‚½ê‡A“ú•tƒtƒHƒ‹ƒ_‚ğì¬‚µAˆÚ“®
+			' ä½•ã‹ã—ã‚‰æ—¥æ™‚ãŒå–å¾—ã§ããŸå ´åˆã€æ—¥ä»˜ãƒ•ã‚©ãƒ«ãƒ€ã‚’ä½œæˆã—ã€ç§»å‹•
 			If Len(strDateOfTaken) <> 0 Then
 				strDateOfTaken = Replace(Split(strDateOfTaken, " ")(0), "/", "")
 				strDateOfTaken = removeInvisibleCharacter(strDateOfTaken)
